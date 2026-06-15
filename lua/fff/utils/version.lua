@@ -127,6 +127,10 @@ function M.resolve(repo_root)
   if not next_version then return nil, 'Could not parse base version: ' .. base_version end
 
   local branch = git(repo_root, 'symbolic-ref', '--short', 'HEAD')
+  if not branch or branch == '' then
+    local github_ref_name = os.getenv('GITHUB_REF_NAME')
+    if github_ref_name and github_ref_name ~= '' then branch = github_ref_name end
+  end
 
   local prerelease_label, npm_tag
   if not branch then
