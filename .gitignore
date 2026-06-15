@@ -19,6 +19,8 @@ crates/fff-notify-debouncer-full/
 packages/fff-bun/glob-bench-bin
 
 dist/
+!packages/fff-node/dist/
+!packages/fff-node/dist/**
 scripts/benchmark-results/
 
 # Native binaries (downloaded at install)

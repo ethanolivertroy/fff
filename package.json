@@ -5,6 +5,7 @@
     "extensions": ["./packages/pi-fff/src/index.ts"]
   },
   "scripts": {
+    "postinstall": "node scripts/pi-git-postinstall.mjs",
     "format": "biome format --write",
     "format:check": "biome format",
     "lint": "biome lint",

@@ -59,16 +59,6 @@
   "dependencies": {
     "ffi-rs": "^1.0.0"
   },
-  "optionalDependencies": {
-    "@ff-labs/fff-bin-darwin-arm64": "0.0.0",
-    "@ff-labs/fff-bin-darwin-x64": "0.0.0",
-    "@ff-labs/fff-bin-linux-x64-gnu": "0.0.0",
-    "@ff-labs/fff-bin-linux-arm64-gnu": "0.0.0",
-    "@ff-labs/fff-bin-linux-x64-musl": "0.0.0",
-    "@ff-labs/fff-bin-linux-arm64-musl": "0.0.0",
-    "@ff-labs/fff-bin-win32-x64": "0.0.0",
-    "@ff-labs/fff-bin-win32-arm64": "0.0.0"
-  },
   "devDependencies": {
     "typescript": "^5.0.0",
     "@types/node": "^22.0.0"

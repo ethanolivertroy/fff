@@ -53,6 +53,17 @@ Pin to a release:
 pi install git:github.com/dmtrKovalenko/fff.nvim@v0.3.0
 ```
 
+**Ethan's git-only dev branch (no npm publishing):**
+
+```bash
+pi install git:github.com/ethanolivertroy/fff@etroy/dev
+```
+
+That branch commits the Node package build output and runs a root `postinstall`
+script that downloads the native `libfff_c` from Ethan-controlled GitHub
+Releases. If the release asset for the current commit is not available yet, it
+falls back to building `fff-c` locally from source.
+
 ### Local development / manual install
 
 ```bash
