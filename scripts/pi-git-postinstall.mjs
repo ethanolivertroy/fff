@@ -102,7 +102,9 @@ function determineReleaseTags() {
   const shortSha = tryRun("git", ["rev-parse", "--short", "HEAD"]);
   if (!shortSha) throw new Error("Could not determine git short SHA for release lookup");
 
-  const branch = tryRun("git", ["symbolic-ref", "--short", "HEAD"]) ?? inferRemoteBranchForHead();
+  const symbolicBranch = tryRun("git", ["symbolic-ref", "--short", "HEAD"]);
+  const inferredBranch = inferRemoteBranchForHead();
+  const branch = inferredBranch === "etroy/dev" ? inferredBranch : (symbolicBranch ?? inferredBranch);
   const nextVersion = bumpPatch(readBaseVersion());
   const primaryLabel = !branch || branch === "main" || branch === "fix/download-version" ? "nightly" : "dev";
   const fallbackLabel = primaryLabel === "dev" ? "nightly" : "dev";
