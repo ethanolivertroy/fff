@@ -74,19 +74,43 @@ function bumpPatch(version) {
   return `${match[1]}.${match[2]}.${Number(match[3]) + 1}`;
 }
 
-function determineReleaseTag() {
-  if (process.env.FFF_RELEASE_TAG) return process.env.FFF_RELEASE_TAG;
+function inferRemoteBranchForHead() {
+  const output = tryRun("git", ["branch", "-r", "--contains", "HEAD"]);
+  if (!output) return null;
+
+  const branches = output
+    .split("\n")
+    .map((line) => line.replace(/^\*\s*/, "").trim())
+    .filter(Boolean)
+    .filter((line) => !line.includes(" -> "))
+    .map((line) => line.replace(/^origin\//, ""));
+
+  return (
+    branches.find((branch) => branch === "etroy/dev") ??
+    branches.find((branch) => branch === "main") ??
+    branches[0] ??
+    null
+  );
+}
+
+function determineReleaseTags() {
+  if (process.env.FFF_RELEASE_TAG) return [process.env.FFF_RELEASE_TAG];
 
   const exactTag = tryRun("git", ["describe", "--exact-match", "--tags", "--match", "v*", "HEAD"]);
-  if (exactTag && /^v\d/.test(exactTag)) return exactTag;
+  if (exactTag && /^v\d/.test(exactTag)) return [exactTag];
 
   const shortSha = tryRun("git", ["rev-parse", "--short", "HEAD"]);
   if (!shortSha) throw new Error("Could not determine git short SHA for release lookup");
 
-  const branch = tryRun("git", ["symbolic-ref", "--short", "HEAD"]);
+  const branch = tryRun("git", ["symbolic-ref", "--short", "HEAD"]) ?? inferRemoteBranchForHead();
   const nextVersion = bumpPatch(readBaseVersion());
-  const label = !branch || branch === "main" || branch === "fix/download-version" ? "nightly" : "dev";
-  return `${nextVersion}-${label}.${shortSha}`;
+  const primaryLabel = !branch || branch === "main" || branch === "fix/download-version" ? "nightly" : "dev";
+  const fallbackLabel = primaryLabel === "dev" ? "nightly" : "dev";
+
+  return [
+    `${nextVersion}-${primaryLabel}.${shortSha}`,
+    `${nextVersion}-${fallbackLabel}.${shortSha}`,
+  ];
 }
 
 function detectLinuxLibc() {
@@ -235,18 +259,21 @@ async function main() {
     return;
   }
 
-  const releaseTag = determineReleaseTag();
+  const releaseTags = determineReleaseTags();
   const releaseRepo = process.env.FFF_RELEASE_REPO ?? "ethanolivertroy/fff";
   const assetName = assetNameForTriple(triple);
-  const url = `https://github.com/${releaseRepo}/releases/download/${encodeURIComponent(releaseTag)}/${assetName}`;
 
-  try {
-    log(`downloading ${assetName} from ${releaseRepo}@${releaseTag}`);
-    await download(url, destination);
-    log(`installed native library: ${destination}`);
-    return;
-  } catch (error) {
-    warn(`release download unavailable: ${error instanceof Error ? error.message : String(error)}`);
+  for (const releaseTag of releaseTags) {
+    const url = `https://github.com/${releaseRepo}/releases/download/${encodeURIComponent(releaseTag)}/${assetName}`;
+
+    try {
+      log(`downloading ${assetName} from ${releaseRepo}@${releaseTag}`);
+      await download(url, destination);
+      log(`installed native library: ${destination}`);
+      return;
+    } catch (error) {
+      warn(`release download unavailable: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 
   if (process.env.FFF_DISABLE_SOURCE_BUILD === "1") {
